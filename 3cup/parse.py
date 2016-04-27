@@ -10,15 +10,13 @@ def parse(filename):
     if not soup:
         raise
 
-    game = Game()
-    session.add(game)
+    game = None
     for tr in soup.find_all('tr'):
         if not tr:
             continue
 
         tds = tr.find_all('td')
         if not tds:
-            session.add(game)
             game = Game()
             continue
 
@@ -40,6 +38,11 @@ def parse(filename):
         for shot_number, td in enumerate(tds[1:13]):
             shot = Shot()
             shot.player_id = player.id
+
+            if game is None:
+                game = Game()
+                session.add(game)
+
             shot.game_id = game.id
             shot.shot_number = shot_number + 1
             shot.points = int(td.text)
