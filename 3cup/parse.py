@@ -46,7 +46,14 @@ def parse(filename):
             shot.game_id = game.id
             shot.shot_number = shot_number + 1
             shot.points = int(td.text)
-            shot.is_moneyball = 's12' in td.get('class', []) if td.has_attr('class') else False
+
+            is_moneyball = False
+            if td.get('class') and \
+               ('s11' in td.get('class') or \
+                's12' in td.get('class')):
+                is_moneyball = True
+
+            shot.is_moneyball = is_moneyball
 
             session.add(shot)
 
