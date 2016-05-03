@@ -121,7 +121,8 @@ if __name__ == '__main__':
     import sys
     name = sys.argv[1]
     if not name:
-        return
+        sys.stderr.write('Name is required\n')
+        sys.exit(2)
 
     makes_for_name(name)
     non_moneyball_makes_for_name(name)
