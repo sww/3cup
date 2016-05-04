@@ -1,3 +1,4 @@
-SQLAlchemy==1.0.12
 beautifulsoup4==4.4.1
-wsgiref==0.1.2
+SQLAlchemy==1.0.12
+tabulate==0.7.5
+wheel==0.24.0

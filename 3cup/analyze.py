@@ -1,3 +1,4 @@
+import tabulate
 from sqlalchemy import func
 
 from models import Player, Shot, session
@@ -10,7 +11,7 @@ def makes_for_name(name):
     query = session.query(func.count(Shot.id)) \
                    .join(Player) \
                    .filter(Player.name == name)
-
+    stats = []
     for i in range(1, 13):
         attempts = query.filter(Shot.shot_number == i) \
                         .scalar()
@@ -20,7 +21,9 @@ def makes_for_name(name):
                      .scalar()
 
         make_percentage = (makes / float(attempts or 1)) * 100
-        print('  Shot #{}: {:.2f}% ({}/{})'.format(i, make_percentage, makes, attempts))
+        stats.append((i, '{:.2f}% ({}/{})'.format(make_percentage, makes, attempts)))
+
+    print(tabulate.tabulate(stats, headers=['Shot', 'Percent'], tablefmt='psql'))
 
 
 def non_moneyball_makes_for_name(name):
@@ -31,7 +34,7 @@ def non_moneyball_makes_for_name(name):
                    .join(Player) \
                    .filter(Player.name == name) \
                    .filter(Shot.is_moneyball.is_(False))
-
+    stats = []
     for i in range(1, 13):
         attempts = query.filter(Shot.shot_number == i) \
                         .scalar()
@@ -40,7 +43,9 @@ def non_moneyball_makes_for_name(name):
                      .filter(Shot.points > 0) \
                      .scalar()
         make_percentage = (makes / float(attempts or 1)) * 100
-        print('  Shot #{}: {:.2f}% ({}/{})'.format(i, make_percentage, makes, attempts))
+        stats.append((i, '{:.2f}% ({}/{})'.format(make_percentage, makes, attempts)))
+
+    print(tabulate.tabulate(stats, headers=['Shot', 'Percentage'], tablefmt='psql'))
 
 
 def moneyball_makes_for_name(name):
@@ -51,7 +56,7 @@ def moneyball_makes_for_name(name):
                    .join(Player) \
                    .filter(Player.name == name) \
                    .filter(Shot.is_moneyball.is_(True))
-
+    stats = []
     for i in range(1, 13):
         moneyball_attempts = query.filter(Shot.shot_number == i) \
                                   .scalar()
@@ -60,7 +65,9 @@ def moneyball_makes_for_name(name):
                                .filter(Shot.points > 0) \
                                .scalar()
         moneyball_make_percentage = (moneyball_makes / float(moneyball_attempts or 1)) * 100
-        print('  Shot #{}: {:.2f}% ({}/{})'.format(i, moneyball_make_percentage, moneyball_makes, moneyball_attempts))
+        stats.append((i, '{:.2f}% ({}/{})'.format(moneyball_make_percentage, moneyball_makes, moneyball_attempts)))
+
+    print(tabulate.tabulate(stats, headers=['Shot', 'Percentage'], tablefmt='psql'))
 
 
 def point_per_shot(name):
@@ -77,10 +84,12 @@ def point_per_shot(name):
                    .join(Player) \
                    .filter(Player.name == name) \
                    .filter(Shot.points > 0)
-
+    stats = []
     for i in range(1, 13):
         shot_sum = query.filter(Shot.shot_number == i).first()
-        print('  Shot #{}: {:.2f} points'.format(i, shot_sum[0] / float(total_shots)))
+        stats.append((i, '{:.2f}'.format(shot_sum[0] / float(total_shots))))
+
+    print(tabulate.tabulate(stats, headers=['Shot', 'Points'], tablefmt='psql'))
 
 
 def cup_percentage_per_shot(name):
@@ -91,7 +100,7 @@ def cup_percentage_per_shot(name):
     query = session.query(Shot).join(Player) \
                                .filter(Player.name == name) \
                                .filter(Shot.points > 0)
-
+    stats = []
     for i in range(1, 13):
         makes = {
             1: 0,
@@ -108,18 +117,19 @@ def cup_percentage_per_shot(name):
 
         num_makes += 1
 
-        print('  Shot #{}'.format(i))
-        print('    1 point: {:.2f}% ({}/{})'.format(
-            (makes[1] / float(num_makes)) * 100, makes[1], num_makes,))
-        print('    2 point: {:.2f}% ({}/{})'.format(
-            (makes[2] / float(num_makes)) * 100, makes[2], num_makes,))
-        print('    3 point: {:.2f}% ({}/{})'.format(
-            (makes[3] / float(num_makes)) * 100, makes[3], num_makes,))
+        stats.append((
+            i,
+            '{:.2f}% ({}/{})'.format((makes[1] / float(num_makes)) * 100, makes[1], num_makes,),
+            '{:.2f}% ({}/{})'.format((makes[2] / float(num_makes)) * 100, makes[2], num_makes,),
+            '{:.2f}% ({}/{})'.format((makes[3] / float(num_makes)) * 100, makes[3], num_makes,),
+        ))
+
+    print(tabulate.tabulate(stats, headers=['Shot', '1 Point', '2 Point', '3 Point'], tablefmt='psql'))
 
 
 if __name__ == '__main__':
     import sys
-    name = sys.argv[1]
+    name = raw_input('Name: ').strip()
     if not name:
         sys.stderr.write('Name is required\n')
         sys.exit(2)
