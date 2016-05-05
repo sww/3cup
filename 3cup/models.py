@@ -13,11 +13,17 @@ class Player(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(32))
 
+    def __repr__(self):
+        return '<Player id={} name="{}">'.format(self.id, self.name)
+
 
 class Game(Base):
     __tablename__ = 'games'
 
     id = Column(Integer, primary_key=True)
+
+    def __repr__(self):
+        return '<Game id={}>'.format(self.id)
 
 
 class Shot(Base):
@@ -31,6 +37,15 @@ class Shot(Base):
     is_moneyball = Column(Boolean, default=False)
 
     player = relationship('Player', backref=backref('Player', lazy='dynamic'))
+
+    def __repr__(self):
+        return '<Shot id={} name="{}" game_id={} shot_number={} points={} is_moneyball={}>'.format(
+            self.id,
+            self.player.name,
+            self.game_id,
+            self.shot_number,
+            self.points,
+            self.is_moneyball)
 
 
 Session = sessionmaker()
