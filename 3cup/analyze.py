@@ -1,3 +1,5 @@
+from functools import partial
+
 import tabulate
 from sqlalchemy import func
 
@@ -6,8 +8,6 @@ from models import Player, Shot, session
 
 def makes_for_name(name):
     """Gets the make percentage per shot number for a person."""
-    print('Make percentage for {}'.format(name))
-
     query = session.query(func.count(Shot.id)) \
                    .join(Player) \
                    .filter(Player.name == name)
@@ -23,13 +23,11 @@ def makes_for_name(name):
         make_percentage = (makes / float(attempts or 1)) * 100
         stats.append((i, '{:.2f}% ({}/{})'.format(make_percentage, makes, attempts)))
 
-    print(tabulate.tabulate(stats, headers=['Shot', 'Percent'], tablefmt='psql'))
+    return stats
 
 
 def non_moneyball_makes_for_name(name):
     """Gets the non moneyball make percentage per shot number for a person."""
-    print('Non moneyball make percentage for {}'.format(name))
-
     query = session.query(func.count(Shot.id)) \
                    .join(Player) \
                    .filter(Player.name == name) \
@@ -45,13 +43,11 @@ def non_moneyball_makes_for_name(name):
         make_percentage = (makes / float(attempts or 1)) * 100
         stats.append((i, '{:.2f}% ({}/{})'.format(make_percentage, makes, attempts)))
 
-    print(tabulate.tabulate(stats, headers=['Shot', 'Percentage'], tablefmt='psql'))
+    return stats
 
 
 def moneyball_makes_for_name(name):
     """Gets the moneyball make percentage per shot number for a person."""
-    print('Moneyball make percentage for {}'.format(name))
-
     query = session.query(func.count(Shot.id)) \
                    .join(Player) \
                    .filter(Player.name == name) \
@@ -67,13 +63,11 @@ def moneyball_makes_for_name(name):
         moneyball_make_percentage = (moneyball_makes / float(moneyball_attempts or 1)) * 100
         stats.append((i, '{:.2f}% ({}/{})'.format(moneyball_make_percentage, moneyball_makes, moneyball_attempts)))
 
-    print(tabulate.tabulate(stats, headers=['Shot', 'Percentage'], tablefmt='psql'))
+    return stats
 
 
 def point_per_shot(name):
     """Gets the points per shot for a person."""
-    print('Points per shot for {}'.format(name))
-
     total_shots = session.query(func.count(Shot.id)) \
                          .join(Player) \
                          .filter(Player.name == name) \
@@ -89,14 +83,12 @@ def point_per_shot(name):
         shot_sum = query.filter(Shot.shot_number == i).first()
         stats.append((i, '{:.2f}'.format(shot_sum[0] / float(total_shots))))
 
-    print(tabulate.tabulate(stats, headers=['Shot', 'Points'], tablefmt='psql'))
+    return stats
 
 
 def cup_percentage_per_shot(name):
     """Get the cup make percentages per shot."""
     # If a shot is made, what cup is it percentage.
-    print('Cup percentage per make per shot for {}'.format(name))
-
     query = session.query(Shot).join(Player) \
                                .filter(Player.name == name) \
                                .filter(Shot.points > 0)
@@ -124,7 +116,7 @@ def cup_percentage_per_shot(name):
             '{:.2f}% ({}/{})'.format((makes[3] / float(num_makes)) * 100, makes[3], num_makes,),
         ))
 
-    print(tabulate.tabulate(stats, headers=['Shot', '1 Point', '2 Point', '3 Point'], tablefmt='psql'))
+    return stats
 
 
 if __name__ == '__main__':
@@ -134,8 +126,35 @@ if __name__ == '__main__':
         sys.stderr.write('Name is required\n')
         sys.exit(2)
 
-    makes_for_name(name)
-    non_moneyball_makes_for_name(name)
-    moneyball_makes_for_name(name)
-    point_per_shot(name)
-    cup_percentage_per_shot(name)
+    tabulate_psql = partial(tabulate.tabulate, tablefmt='psql')
+
+    print('Make percentage for {}'.format(name))
+    print(
+        tabulate_psql(
+            makes_for_name(name),
+            headers=['Shot', 'Percent']))
+
+    print('Non moneyball make percentage for {}'.format(name))
+    print(
+        tabulate.tabulate(
+            non_moneyball_makes_for_name(name),
+            headers=['Shot', 'Percentage'],
+            tablefmt='psql'))
+
+    print('Moneyball make percentage for {}'.format(name))
+    print(
+        tabulate_psql(
+            moneyball_makes_for_name(name),
+            headers=['Shot', 'Percentage']))
+
+    print('Points per shot for {}'.format(name))
+    print(
+        tabulate_psql(
+            point_per_shot(name),
+            headers=['Shot', 'Points']))
+
+    print('Cup percentage per make per shot for {}'.format(name))
+    print(
+        tabulate_psql(
+            cup_percentage_per_shot(name),
+            headers=['Shot', '1 Point', '2 Point', '3 Point']))
