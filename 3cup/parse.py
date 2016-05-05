@@ -43,14 +43,17 @@ def parse(filename):
                 game = Game()
                 session.add(game)
 
+            points = int(td.text)
+
             shot.game_id = game.id
             shot.shot_number = shot_number + 1
-            shot.points = int(td.text)
+            shot.points = points
 
             is_moneyball = False
             if td.get('class') and \
                ('s11' in td.get('class') or \
-                's12' in td.get('class')):
+                's12' in td.get('class') or \
+                points > 3):
                 is_moneyball = True
 
             shot.is_moneyball = is_moneyball
