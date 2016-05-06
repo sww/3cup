@@ -68,20 +68,13 @@ def moneyball_makes_for_name(name):
 
 def point_per_shot(name):
     """Gets the points per shot for a person."""
-    total_shots = session.query(func.count(Shot.id)) \
-                         .join(Player) \
-                         .filter(Player.name == name) \
-                         .filter(Shot.shot_number == 1) \
-                         .scalar()
-
-    query = session.query(func.sum(Shot.points)) \
+    query = session.query(func.avg(Shot.points)) \
                    .join(Player) \
-                   .filter(Player.name == name) \
-                   .filter(Shot.points > 0)
+                   .filter(Player.name == name)
     stats = []
     for i in range(1, 13):
-        shot_sum = query.filter(Shot.shot_number == i).first()
-        stats.append((i, '{:.2f}'.format(shot_sum[0] / float(total_shots))))
+        shot_sum = query.filter(Shot.shot_number == i).scalar()
+        stats.append((i, '{:.2f}'.format(float(shot_sum))))
 
     return stats
 
